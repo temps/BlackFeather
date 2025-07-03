@@ -10,16 +10,23 @@ from campaign_manager import (
 from world_memory import WorldMemoryManager, ALLOWED_TYPES
 from prompt_builder import build_prompt
 
-st.write(
-    "\U0001F512 OpenAI key loaded:",
-    "\u2705" if "openai_api_key" in st.secrets else "\u274C",
+# Handle API key presence detection
+has_api_key = (
+    "openai_api_key" in st.secrets
+    or st.secrets.get("general", {}).get("openai_api_key")
+    or os.getenv("OPENAI_API_KEY")
 )
+st.write("\U0001F512 OpenAI key loaded:", "\u2705" if has_api_key else "\u274C")
 
 
 def get_response(prompt: str) -> str:
     """Return a response from OpenAI's chat API with graceful errors."""
     try:
-        api_key = st.secrets.get("openai_api_key") or st.secrets.get("general", {}).get("openai_api_key")
+        api_key = (
+            st.secrets.get("openai_api_key")
+            or st.secrets.get("general", {}).get("openai_api_key")
+            or os.getenv("OPENAI_API_KEY")
+        )
         if not api_key:
             st.error("Missing OpenAI API key.")
             return "\u26A0\ufe0f Missing API key."
@@ -189,8 +196,5 @@ if "world_memory" in st.session_state:
                     )
                     st.experimental_rerun()
                 except ValueError as e:
-wnanul-codex/create-campaign_manager-module-for-ttrpg-chatbot
-                    st.error(str(e))
+    st.error(str(e))
 
-                    st.error(str(e))
-main
