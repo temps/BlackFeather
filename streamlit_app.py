@@ -2,24 +2,39 @@ import os
 import json
 import streamlit as st
 
-from campaign_manager import CampaignManager, PlayerManager
-from world_memory import WorldMemoryManager
+from campaign_manager import (
+    CampaignManager,
+    PlayerManager,
+    PlayerCharacter,
+)
+from world_memory import WorldMemoryManager, ALLOWED_TYPES
 from prompt_builder import build_prompt
+
+st.write(
+    "\U0001F512 OpenAI key loaded:",
+    "\u2705" if "openai_api_key" in st.secrets else "\u274C",
+)
 
 
 def get_response(prompt: str) -> str:
-    """Return a response from OpenAI's chat API."""
-    import openai
+    """Return a response from OpenAI's chat API with graceful errors."""
+    try:
+        api_key = st.secrets.get("openai_api_key") or st.secrets.get("general", {}).get("openai_api_key")
+        if not api_key:
+            st.error("Missing OpenAI API key.")
+            return "\u26A0\ufe0f Missing API key."
 
-    api_key = st.secrets.get("openai_api_key") or os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        return "Missing OpenAI API key."
-    openai.api_key = api_key
-    resp = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-    )
-    return resp.choices[0].message["content"].strip()
+        import openai
+
+        openai.api_key = api_key
+        resp = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return resp.choices[0].message["content"].strip()
+    except Exception as e:  # pragma: no cover - depends on external API
+        st.error(f"API Error: {e}")
+        return f"\u274c API Error: {e}"
 
 
 def initialize_state(campaign_name: str, player_name: str):
@@ -28,13 +43,43 @@ def initialize_state(campaign_name: str, player_name: str):
     cm.initialize_player_state(player_name)
     pm = PlayerManager()
     character = pm.load_character(player_name)
-    if character is None:
-        character = pm.create_character()
     wm = WorldMemoryManager(campaign_name)
     st.session_state.campaign_manager = cm
     st.session_state.player_manager = pm
     st.session_state.world_memory = wm
-    st.session_state.character = character
+    if character is None:
+        st.session_state.character_missing = True
+    else:
+        st.session_state.character_missing = False
+        st.session_state.character = character
+
+
+def character_creation_form(default_name: str):
+    """Display a form for new character creation."""
+    pm: PlayerManager = st.session_state.player_manager
+    with st.form("create_character"):
+        st.write("Create a new character")
+        name = st.text_input("Name", default_name)
+        race = st.text_input("Race")
+        char_class = st.text_input("Class")
+        level = st.number_input("Level", min_value=1, step=1, value=1)
+        background = st.text_input("Background")
+        submitted = st.form_submit_button("Create")
+        if submitted:
+            pc = PlayerCharacter(
+                name=name,
+                race=race,
+                character_class=char_class,
+                level=int(level),
+                background=background,
+                attributes={},
+            )
+            os.makedirs(os.path.dirname(pm._player_file(name)), exist_ok=True)
+            with open(pm._player_file(name), "w", encoding="utf-8") as f:
+                json.dump(pc.to_dict(), f, indent=2)
+            st.session_state.character = pc
+            st.session_state.character_missing = False
+            st.experimental_rerun()
 
 
 def load_player_state(cm: CampaignManager, player_name: str) -> dict:
@@ -64,6 +109,11 @@ if campaign_name and player_name and "campaign_manager" not in st.session_state:
     st.session_state.campaign_name = campaign_name
     st.session_state.player_name = player_name
 
+if st.session_state.get("character_missing"):
+    st.warning("Character not found. Please create one.")
+    character_creation_form(player_name)
+    st.stop()
+
 if "history" not in st.session_state:
     st.session_state.history = []
 
@@ -92,7 +142,22 @@ if st.button("Send") and user_message:
     st.session_state.history.append(f"Narrator: {response}")
 
 for line in st.session_state.history:
-    st.write(line)
+    if line.startswith("Player: "):
+        msg = line.split(": ", 1)[1]
+        st.markdown(f"\U0001F9D1 **{msg}**")
+    elif line.startswith("Narrator: "):
+        msg = line.split(": ", 1)[1]
+        st.markdown(f"\U0001F4D6 *{msg}*")
+    else:
+        st.write(line)
+
+
+if st.button("Save Chat Log"):
+    os.makedirs("logs", exist_ok=True)
+    log_name = f"{campaign_name}_{player_name}.json".replace(" ", "_")
+    with open(os.path.join("logs", log_name), "w", encoding="utf-8") as f:
+        json.dump(st.session_state.history, f, indent=2)
+    st.success(f"Chat log saved to {log_name}")
 
 st.header("Player Stats")
 if "campaign_manager" in st.session_state:
@@ -103,3 +168,25 @@ st.header("World Memory Preview")
 if "world_memory" in st.session_state:
     wm_data = list(st.session_state.world_memory._load().values())[:5]
     st.json(wm_data)
+
+    with st.expander("Add World Memory Entry"):
+        with st.form("add_memory"):
+            mem_type = st.selectbox("Type", ALLOWED_TYPES)
+            name = st.text_input("Name")
+            desc = st.text_area("Description")
+            tags = st.text_input("Tags (comma separated)")
+            submitted = st.form_submit_button("Add")
+            if submitted:
+                wm = st.session_state.world_memory
+                try:
+                    wm.add_memory_entry(
+                        {
+                            "type": mem_type,
+                            "name": name,
+                            "description": desc,
+                            "tags": [t.strip() for t in tags.split(',') if t.strip()],
+                        }
+                    )
+                    st.experimental_rerun()
+                except ValueError as e:
+                    st.error(str(e))
