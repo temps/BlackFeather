@@ -189,4 +189,8 @@ if "world_memory" in st.session_state:
                     )
                     st.experimental_rerun()
                 except ValueError as e:
+wnanul-codex/create-campaign_manager-module-for-ttrpg-chatbot
                     st.error(str(e))
+
+                    st.error(str(e))
+main
