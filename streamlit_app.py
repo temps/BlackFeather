@@ -10,6 +10,7 @@ from campaign_manager import (
 from world_memory import WorldMemoryManager, ALLOWED_TYPES
 from prompt_builder import build_prompt
 
+# Handle API key presence detection
 has_api_key = (
     "openai_api_key" in st.secrets
     or st.secrets.get("general", {}).get("openai_api_key")
@@ -195,4 +196,5 @@ if "world_memory" in st.session_state:
                     )
                     st.experimental_rerun()
                 except ValueError as e:
-                    st.error(str(e))
+    st.error(str(e))
+
