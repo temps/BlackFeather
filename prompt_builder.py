@@ -10,7 +10,16 @@ def summarize_player(player_data: Dict[str, Any]) -> str:
     char_class = player_data.get("character_class", "adventurer")
     level = player_data.get("level", 1)
     background = player_data.get("background", "")
+    platinum = player_data.get(
+        "platinum", player_data.get("state", {}).get("platinum", 0)
+    )
     gold = player_data.get("gold", player_data.get("state", {}).get("gold", 0))
+    silver = player_data.get(
+        "silver", player_data.get("state", {}).get("silver", 0)
+    )
+    copper = player_data.get(
+        "copper", player_data.get("state", {}).get("copper", 0)
+    )
     inventory = player_data.get("inventory", [])
     if isinstance(inventory, dict):
         inventory = list(inventory.values())
@@ -23,8 +32,20 @@ def summarize_player(player_data: Dict[str, Any]) -> str:
     if background:
         parts.append(f"from {background}")
     summary = " ".join(parts) + "."
-    if gold or items:
-        summary += f" They have {gold} gold"
+    total_gold = gold + silver / 10 + copper / 100 + platinum * 10
+    if total_gold or items:
+        currency_parts = []
+        if platinum:
+            currency_parts.append(f"{platinum} platinum")
+        if gold:
+            currency_parts.append(f"{gold} gold")
+        if silver:
+            currency_parts.append(f"{silver} silver")
+        if copper:
+            currency_parts.append(f"{copper} copper")
+        if currency_parts:
+            summary += " They have " + ", ".join(currency_parts)
+            summary += f" (worth {total_gold:.2f} gold)"
         if items:
             summary += f" and carry {items}"
         summary += "."

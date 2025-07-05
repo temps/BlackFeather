@@ -167,7 +167,14 @@ class CampaignManager:
         """Create a default player state file if it doesn't exist."""
         file_path = self._player_state_file(player_name)
         if not os.path.exists(file_path):
-            default_state = {"gold": 0, "inventory": [], "quests": []}
+            default_state = {
+                "platinum": 0,
+                "gold": 0,
+                "silver": 0,
+                "copper": 0,
+                "inventory": [],
+                "quests": [],
+            }
             with open(file_path, "w", encoding="utf-8") as f:
                 json.dump(default_state, f, indent=2)
 

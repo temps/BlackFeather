@@ -95,8 +95,29 @@ def load_player_state(cm: CampaignManager, player_name: str) -> dict:
     path = cm._player_state_file(player_name)
     if os.path.exists(path):
         with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return {"gold": 0, "inventory": [], "quests": []}
+            data = json.load(f)
+        # Backwards compatibility for older saves with only gold
+        if "platinum" not in data:
+            data.setdefault("platinum", 0)
+        if "silver" not in data:
+            data.setdefault("silver", 0)
+        if "copper" not in data:
+            data.setdefault("copper", 0)
+        if "gold" not in data:
+            data.setdefault("gold", 0)
+        if "inventory" not in data:
+            data["inventory"] = []
+        if "quests" not in data:
+            data["quests"] = []
+        return data
+    return {
+        "platinum": 0,
+        "gold": 0,
+        "silver": 0,
+        "copper": 0,
+        "inventory": [],
+        "quests": [],
+    }
 
 
 def load_campaign_data(cm: CampaignManager) -> dict:
@@ -157,10 +178,13 @@ if st.session_state.get("character_missing"):
 
 if "history" not in st.session_state:
     st.session_state.history = []
+if "user_message" not in st.session_state:
+    st.session_state.user_message = ""
 
-user_message = st.text_input("Message", "")
-if st.button("Send") and user_message:
-    st.session_state.history.append(f"Player: {user_message}")
+user_message = st.text_input("Message", st.session_state.user_message, key="msg_input")
+if st.button("Send") and st.session_state.user_message:
+    msg_to_send = st.session_state.user_message
+    st.session_state.history.append(f"Player: {msg_to_send}")
     cm = st.session_state.campaign_manager
     wm = st.session_state.world_memory
 
@@ -177,10 +201,11 @@ if st.button("Send") and user_message:
         campaign_data,
         world_mem,
         st.session_state.history,
-        user_message,
+        msg_to_send,
     )
     response = get_response(prompt)
     st.session_state.history.append(f"Narrator: {response}")
+    st.session_state.user_message = ""
 
 for line in st.session_state.history:
     if line.startswith("Player: "):
@@ -203,7 +228,19 @@ if st.button("Save Chat Log"):
 st.header("Player Stats")
 if "campaign_manager" in st.session_state:
     ps = load_player_state(st.session_state.campaign_manager, player_name)
-    st.json(ps)
+    cols = st.columns(5)
+    cols[0].metric("Platinum", ps.get("platinum", 0))
+    cols[1].metric("Gold", ps.get("gold", 0))
+    cols[2].metric("Silver", ps.get("silver", 0))
+    cols[3].metric("Copper", ps.get("copper", 0))
+    total_gold = ps.get("gold", 0) + ps.get("silver", 0) / 10 + ps.get("copper", 0) / 100 + ps.get("platinum", 0) * 10
+    cols[4].metric("Total (g)", f"{total_gold:.2f}")
+
+    st.subheader("Inventory")
+    for idx, item in enumerate(ps.get("inventory", [])):
+        if st.button(item, key=f"inv_{idx}"):
+            st.session_state.user_message = item
+            st.experimental_rerun()
 
 st.header("World Memory Preview")
 if "world_memory" in st.session_state:
