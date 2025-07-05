@@ -3,6 +3,7 @@
 import json
 import os
 import uuid
+import shutil
 from dataclasses import dataclass, asdict
 from datetime import datetime
 from typing import Dict, Any, List
@@ -26,6 +27,26 @@ CAMPAIGNS_DIR = os.path.join(os.getcwd(), "campaigns")
 
 # Campaign data schema versioning
 VERSION = 1
+
+
+def list_campaigns() -> List[str]:
+    """Return a list of available campaign names."""
+    if not os.path.exists(CAMPAIGNS_DIR):
+        return []
+    return [
+        name
+        for name in os.listdir(CAMPAIGNS_DIR)
+        if os.path.isdir(os.path.join(CAMPAIGNS_DIR, name))
+    ]
+
+
+def delete_campaign(name: str) -> bool:
+    """Delete an entire campaign directory."""
+    path = os.path.join(CAMPAIGNS_DIR, name)
+    if not os.path.isdir(path):
+        return False
+    shutil.rmtree(path)
+    return True
 
 
 @dataclass
