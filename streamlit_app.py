@@ -6,6 +6,8 @@ from campaign_manager import (
     CampaignManager,
     PlayerManager,
     PlayerCharacter,
+    list_campaigns,
+    delete_campaign,
 )
 from world_memory import WorldMemoryManager, ALLOWED_TYPES
 from prompt_builder import build_prompt
@@ -108,7 +110,39 @@ def load_campaign_data(cm: CampaignManager) -> dict:
 
 st.title("TTRPG Chatbot")
 
-campaign_name = st.text_input("Campaign Name", st.session_state.get("campaign_name", "demo"))
+with st.expander("Manage Campaigns"):
+    campaigns = list_campaigns()
+    if campaigns:
+        selected = st.selectbox("Existing Campaigns", campaigns, key="campaign_select")
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Load", key="load_campaign_btn"):
+                st.session_state.campaign_name = selected
+                for key in ("campaign_manager", "player_manager", "world_memory"):
+                    st.session_state.pop(key, None)
+                st.session_state.history = []
+                if st.session_state.get("player_name"):
+                    initialize_state(selected, st.session_state["player_name"])
+                st.experimental_rerun()
+        with col2:
+            if st.button("Delete", key="delete_campaign_btn"):
+                delete_campaign(selected)
+                if st.session_state.get("campaign_name") == selected:
+                    for key in (
+                        "campaign_manager",
+                        "player_manager",
+                        "world_memory",
+                        "campaign_name",
+                    ):
+                        st.session_state.pop(key, None)
+                st.experimental_rerun()
+    else:
+        st.write("No campaigns found.")
+
+campaign_name = st.text_input(
+    "Campaign Name",
+    st.session_state.get("campaign_name", "demo"),
+)
 player_name = st.text_input("Player Name", st.session_state.get("player_name", ""))
 
 if campaign_name and player_name and "campaign_manager" not in st.session_state:
@@ -196,5 +230,5 @@ if "world_memory" in st.session_state:
                     )
                     st.experimental_rerun()
                 except ValueError as e:
-    st.error(str(e))
+                    st.error(str(e))
 
