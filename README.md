@@ -62,3 +62,11 @@ Each campaign lives in the `campaigns/` folder and stores its own NPCs, quests, 
    ```bash
    streamlit run streamlit_app.py
    ```
+
+## Running Tests
+
+Execute the test suite with:
+
+```bash
+pytest
+```
