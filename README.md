@@ -1,6 +1,20 @@
 # BlackFeather
 Black Feather Custom is Chatbot for DMs or Roleplay. Train a model (or use prompt engineering) to act as a recurring NPC or companion in a TTRPG or fantasy game
 
+## Setup
+
+Install the required packages with pip:
+
+```bash
+pip install -r requirements.txt
+```
+
+Launch the interface with:
+
+```bash
+streamlit run streamlit_app.py
+```
+
 ## Currency Tracking
 
 The Streamlit interface now includes an **Update Currency** panel under the
