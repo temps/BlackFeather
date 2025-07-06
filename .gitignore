@@ -1,5 +1,13 @@
-players/
-campaigns/
-logs/
+# Python caches
 __pycache__/
+
+# Log files
+*.log
+
+# Runtime directories
+campaigns/
+players/
+logs/
+
+# Virtual environments
 .venv/
