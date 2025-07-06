@@ -63,9 +63,13 @@ class JournalManager:
             self._save(data)
 
     def update_gold(self, delta: int) -> None:
-        """Change gold by ``delta`` which may be positive or negative."""
+        """Change gold by ``delta`` which may be positive or negative.
+
+        The resulting total will never be less than zero.
+        """
         data = self._load()
-        data["gold"] = data.get("gold", 0) + int(delta)
+        new_total = max(0, data.get("gold", 0) + int(delta))
+        data["gold"] = new_total
         self._save(data)
 
     def add_gold(self, amount: int) -> None:
@@ -73,7 +77,10 @@ class JournalManager:
         self.update_gold(int(amount))
 
     def remove_gold(self, amount: int) -> None:
-        """Decrease gold by ``amount`` without going below zero."""
+        """Decrease gold by ``amount``.
+
+        The total gold is clamped at zero by :py:meth:`update_gold`.
+        """
         self.update_gold(-int(amount))
 
     def update_experience(self, delta: int) -> None:
