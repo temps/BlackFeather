@@ -32,3 +32,19 @@ jm.add_item("Magic sword")
 jm.remove_item("Old dagger")
 jm.add_event("Lia married the prince", title="Wedding")
 ```
+
+## Campaigns
+
+Each campaign lives in the `campaigns/` folder and stores its own NPCs, quests, items and event log as JSON files. Player state is kept in a `players/` subdirectory so you can manage multiple characters per campaign. Use the **Manage Campaigns** panel in the UI to create, load or delete campaigns.
+
+## Running the Streamlit App Locally
+
+1. Install the dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. Provide your OpenAI key using the `OPENAI_API_KEY` environment variable or by adding `openai_api_key` to `st.secrets`.
+3. Launch the application:
+   ```bash
+   streamlit run streamlit_app.py
+   ```
