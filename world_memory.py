@@ -3,7 +3,7 @@
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 # Allowed entity types for validation
@@ -51,7 +51,7 @@ class WorldMemoryManager:
             "description": entry.get("description", ""),
             "tags": entry.get("tags", []),
             "related_to": entry.get("related_to", []),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         data[entry_id] = entry_obj
         self._save(data)
