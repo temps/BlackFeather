@@ -63,9 +63,13 @@ class JournalManager:
             self._save(data)
 
     def update_gold(self, delta: int) -> None:
-        """Change gold by ``delta`` which may be positive or negative."""
+        """Change gold by ``delta`` which may be positive or negative.
+
+        The resulting gold value will never go below zero.
+        """
         data = self._load()
-        data["gold"] = data.get("gold", 0) + int(delta)
+        new_total = data.get("gold", 0) + int(delta)
+        data["gold"] = max(new_total, 0)
         self._save(data)
 
     def add_gold(self, amount: int) -> None:
