@@ -1,0 +1,5 @@
+players/
+campaigns/
+logs/
+__pycache__/
+.venv/
