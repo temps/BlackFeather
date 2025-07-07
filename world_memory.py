@@ -7,19 +7,30 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 # Allowed entity types for validation
-ALLOWED_TYPES = ["city", "faction", "business", "monster", "event"]
+# ``villain`` and ``plot`` are used internally for DM information.
+ALLOWED_TYPES = [
+    "city",
+    "faction",
+    "business",
+    "monster",
+    "event",
+    "villain",
+    "plot",
+]
 
-from campaign_manager import CAMPAIGNS_DIR, deep_update
+from .campaign_manager import CAMPAIGNS_DIR, deep_update
 
 
 class WorldMemoryManager:
     """Handle persistent world memory for a specific campaign."""
 
-    def __init__(self, campaign_name: str) -> None:
+    def __init__(self, campaign_name: str, hidden: bool = False) -> None:
         self.campaign_name = campaign_name
+        self.hidden = hidden
         self.path = os.path.join(CAMPAIGNS_DIR, campaign_name)
         os.makedirs(self.path, exist_ok=True)
-        self.file_path = os.path.join(self.path, "world_memory.json")
+        filename = "world_memory_dm.json" if hidden else "world_memory.json"
+        self.file_path = os.path.join(self.path, filename)
         if not os.path.exists(self.file_path):
             with open(self.file_path, "w", encoding="utf-8") as f:
                 json.dump({}, f, indent=2)
