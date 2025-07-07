@@ -6,11 +6,12 @@ from campaign_manager import (
     CampaignManager,
     PlayerManager,
     PlayerCharacter,
-    list_campaigns,
-    delete_campaign,
 )
-from world_memory import WorldMemoryManager, ALLOWED_TYPES
+from world_memory import WorldMemoryManager
 from prompt_builder import build_prompt
+from ui.campaign_panel import campaign_management_panel
+from ui.player_stats_panel import player_stats_panel
+from ui.world_memory_panel import world_memory_panel
 
 # Handle API key presence detection
 has_api_key = (
@@ -131,34 +132,7 @@ def load_campaign_data(cm: CampaignManager) -> dict:
 
 st.title("TTRPG Chatbot")
 
-with st.expander("Manage Campaigns"):
-    campaigns = list_campaigns()
-    if campaigns:
-        selected = st.selectbox("Existing Campaigns", campaigns, key="campaign_select")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Load", key="load_campaign_btn"):
-                st.session_state.campaign_name = selected
-                for key in ("campaign_manager", "player_manager", "world_memory"):
-                    st.session_state.pop(key, None)
-                st.session_state.history = []
-                if st.session_state.get("player_name"):
-                    initialize_state(selected, st.session_state["player_name"])
-                st.experimental_rerun()
-        with col2:
-            if st.button("Delete", key="delete_campaign_btn"):
-                delete_campaign(selected)
-                if st.session_state.get("campaign_name") == selected:
-                    for key in (
-                        "campaign_manager",
-                        "player_manager",
-                        "world_memory",
-                        "campaign_name",
-                    ):
-                        st.session_state.pop(key, None)
-                st.experimental_rerun()
-    else:
-        st.write("No campaigns found.")
+campaign_management_panel(initialize_state)
 
 campaign_name = st.text_input(
     "Campaign Name",
@@ -225,64 +199,6 @@ if st.button("Save Chat Log"):
         json.dump(st.session_state.history, f, indent=2)
     st.success(f"Chat log saved to {log_name}")
 
-st.header("Player Stats")
-if "campaign_manager" in st.session_state:
-    ps = load_player_state(st.session_state.campaign_manager, player_name)
-    cols = st.columns(5)
-    cols[0].metric("Platinum", ps.get("platinum", 0))
-    cols[1].metric("Gold", ps.get("gold", 0))
-    cols[2].metric("Silver", ps.get("silver", 0))
-    cols[3].metric("Copper", ps.get("copper", 0))
-    total_gold = ps.get("gold", 0) + ps.get("silver", 0) / 10 + ps.get("copper", 0) / 100 + ps.get("platinum", 0) * 10
-    cols[4].metric("Total (g)", f"{total_gold:.2f}")
-
-    with st.expander("Update Currency"):
-        with st.form("update_currency"):
-            delta_platinum = st.number_input("Platinum \u2795\u2796", value=0, step=1)
-            delta_gold = st.number_input("Gold \u2795\u2796", value=0, step=1)
-            delta_silver = st.number_input("Silver \u2795\u2796", value=0, step=1)
-            delta_copper = st.number_input("Copper \u2795\u2796", value=0, step=1)
-            submitted = st.form_submit_button("Apply")
-            if submitted:
-                new_state = {
-                    "platinum": ps.get("platinum", 0) + int(delta_platinum),
-                    "gold": ps.get("gold", 0) + int(delta_gold),
-                    "silver": ps.get("silver", 0) + int(delta_silver),
-                    "copper": ps.get("copper", 0) + int(delta_copper),
-                }
-                st.session_state.campaign_manager.update_player_state(player_name, new_state)
-                st.experimental_rerun()
-
-    st.subheader("Inventory")
-    for idx, item in enumerate(ps.get("inventory", [])):
-        if st.button(item, key=f"inv_{idx}"):
-            st.session_state.user_message = item
-            st.experimental_rerun()
-
-st.header("World Memory Preview")
-if "world_memory" in st.session_state:
-    wm_data = list(st.session_state.world_memory._load().values())[:5]
-    st.json(wm_data)
-
-    with st.expander("Add World Memory Entry"):
-        with st.form("add_memory"):
-            mem_type = st.selectbox("Type", ALLOWED_TYPES)
-            name = st.text_input("Name")
-            desc = st.text_area("Description")
-            tags = st.text_input("Tags (comma separated)")
-            submitted = st.form_submit_button("Add")
-            if submitted:
-                wm = st.session_state.world_memory
-                try:
-                    wm.add_memory_entry(
-                        {
-                            "type": mem_type,
-                            "name": name,
-                            "description": desc,
-                            "tags": [t.strip() for t in tags.split(',') if t.strip()],
-                        }
-                    )
-                    st.experimental_rerun()
-                except ValueError as e:
-                    st.error(str(e))
+player_stats_panel(player_name, load_player_state)
+world_memory_panel()
 
