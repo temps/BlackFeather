@@ -46,6 +46,8 @@ def get_response(prompt: str) -> str:
         resp = openai.ChatCompletion.create(
             model=CONFIG.chat_model,
             messages=messages,
+            temperature=CONFIG.temperature,
+            max_tokens=CONFIG.max_tokens,
         )
         return resp.choices[0].message["content"].strip()
     except Exception as e:  # pragma: no cover - depends on external API
