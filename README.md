@@ -70,3 +70,11 @@ Execute the test suite with:
 ```bash
 pytest
 ```
+
+## Story Arc Features
+
+Campaigns now automatically create a hidden villain entry and DM event log. Use
+``ArcManager`` to inspect or advance the antagonist's agenda without revealing
+details to the player. ``WorldMemoryManager`` accepts ``hidden=True`` to store
+DM-only information and supports ``villain`` and ``plot`` entity types. Quest
+titles must be unique when added via ``CampaignManager.add_quest``.

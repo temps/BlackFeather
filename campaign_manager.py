@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Dict, Any, List
 
 
+
 def deep_update(orig: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
     """Recursively update ``orig`` with values from ``new``."""
     for key, value in new.items():
@@ -119,6 +120,7 @@ class CampaignManager:
         "quests.json",
         "items.json",
         "events_log.json",
+        "events_dm_log.json",
         "world_state.json",
     ]
 
@@ -144,6 +146,9 @@ class CampaignManager:
 
         # ensure players directory inside each campaign
         os.makedirs(os.path.join(self.path, "players"), exist_ok=True)
+        # initialize story arc with default villain
+        from .arc_manager import ArcManager
+        ArcManager(name)
 
     def _load_json(self, filename: str) -> Dict[str, Any]:
         path = os.path.join(self.path, filename)
@@ -229,7 +234,15 @@ class CampaignManager:
         return True
 
     def add_quest(self, quest_data: Dict[str, Any]) -> str:
+        """Add a quest ensuring titles remain unique."""
         quests = self._load_quests()
+        title = quest_data.get("title")
+        if title:
+            all_titles = []
+            for section in quests.values():
+                all_titles.extend(q.get("title") for q in section.values())
+            if title in all_titles:
+                raise ValueError("Quest with this title already exists")
         quest_id = str(uuid.uuid4())
         quest_data["timestamp"] = datetime.now(timezone.utc).isoformat()
         quests["active"][quest_id] = quest_data
@@ -275,14 +288,16 @@ class CampaignManager:
             return True
         return False
 
-    def log_event(self, event: str):
-        events = self._load_json("events_log.json")
+    def log_event(self, event: str, hidden: bool = False):
+        """Record an event. Set ``hidden`` to True for DM-only logs."""
+        filename = "events_dm_log.json" if hidden else "events_log.json"
+        events = self._load_json(filename)
         event_id = str(uuid.uuid4())
         events[event_id] = {
             "description": event,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
-        self._save_json("events_log.json", events)
+        self._save_json(filename, events)
         return event_id
 
     def update_world_state(self, updates: Dict[str, Any]):
