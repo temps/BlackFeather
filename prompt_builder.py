@@ -94,6 +94,7 @@ def build_prompt(
     world_memory: List[Dict[str, Any]],
     conversation_history: List[str],
     current_input: str,
+    system_prompt: str | None = None,
 ) -> str:
     """Build a text prompt for the chatbot."""
     player_summary = summarize_player(player_data)
@@ -101,8 +102,9 @@ def build_prompt(
     world_summary = summarize_world(world_memory)
     history = truncate_history(conversation_history)
 
+    intro = system_prompt or f"You are the narrator guiding {player_name} on their adventures."
     lines = [
-        f"You are the narrator guiding {player_name} on their adventures.",
+        intro,
         "\n### Player Info",
         player_summary,
         "\n### Campaign",

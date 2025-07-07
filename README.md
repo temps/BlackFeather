@@ -63,6 +63,7 @@ Each campaign lives in the `campaigns/` folder and stores its own NPCs, quests, 
    streamlit run streamlit_app.py
    ```
 
+codex/add-deployment-guide-to-readme
 ## Deployment
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for instructions on deploying the app to Streamlit Cloud and Heroku.
