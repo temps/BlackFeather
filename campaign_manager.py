@@ -5,7 +5,7 @@ import os
 import uuid
 import shutil
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, List
 
 
@@ -214,7 +214,7 @@ class CampaignManager:
         """
         npcs = self._load_json("npcs.json")
         npc_id = str(uuid.uuid4())
-        npc_data.setdefault("timestamp", datetime.utcnow().isoformat())
+        npc_data.setdefault("timestamp", datetime.now(timezone.utc).isoformat())
         npcs[npc_id] = npc_data
         self._save_json("npcs.json", npcs)
         return npc_id
@@ -231,7 +231,7 @@ class CampaignManager:
     def add_quest(self, quest_data: Dict[str, Any]) -> str:
         quests = self._load_quests()
         quest_id = str(uuid.uuid4())
-        quest_data["timestamp"] = datetime.utcnow().isoformat()
+        quest_data["timestamp"] = datetime.now(timezone.utc).isoformat()
         quests["active"][quest_id] = quest_data
         self._save_quests(quests)
         return quest_id
@@ -258,7 +258,7 @@ class CampaignManager:
                         {
                             "id": quest_id,
                             "status": "completed",
-                            "timestamp": datetime.utcnow().isoformat(),
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
                         }
                     )
                     with open(path, "w", encoding="utf-8") as f:
@@ -280,7 +280,7 @@ class CampaignManager:
         event_id = str(uuid.uuid4())
         events[event_id] = {
             "description": event,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         self._save_json("events_log.json", events)
         return event_id
@@ -293,7 +293,7 @@ class CampaignManager:
     def add_item(self, item_data: Dict[str, Any]) -> str:
         items = self._load_json("items.json")
         item_id = str(uuid.uuid4())
-        item_data["timestamp"] = datetime.utcnow().isoformat()
+        item_data["timestamp"] = datetime.now(timezone.utc).isoformat()
         items[item_id] = item_data
         self._save_json("items.json", items)
         return item_id

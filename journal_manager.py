@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 from campaign_manager import CAMPAIGNS_DIR
@@ -129,7 +129,7 @@ class JournalManager:
             {
                 "title": title or "",
                 "description": description,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         )
         self._save(data)
