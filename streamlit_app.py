@@ -2,6 +2,8 @@ import os
 import json
 import streamlit as st
 
+from config import CONFIG
+
 from campaign_manager import (
     CampaignManager,
     PlayerManager,
@@ -36,9 +38,13 @@ def get_response(prompt: str) -> str:
         import openai
 
         openai.api_key = api_key
+        messages = []
+        if CONFIG.system_prompt:
+            messages.append({"role": "system", "content": CONFIG.system_prompt})
+        messages.append({"role": "user", "content": prompt})
         resp = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt}],
+            model=CONFIG.chat_model,
+            messages=messages,
         )
         return resp.choices[0].message["content"].strip()
     except Exception as e:  # pragma: no cover - depends on external API
@@ -202,6 +208,7 @@ if st.button("Send") and st.session_state.user_message:
         world_mem,
         st.session_state.history,
         msg_to_send,
+        CONFIG.system_prompt,
     )
     response = get_response(prompt)
     st.session_state.history.append(f"Narrator: {response}")
