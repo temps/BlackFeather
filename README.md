@@ -15,6 +15,18 @@ Launch the interface with:
 streamlit run streamlit_app.py
 ```
 
+### Configuration
+
+The behaviour of the chatbot can be tuned via a `config.json` file or
+environment variables. Available settings include:
+
+- `chat_model` – OpenAI model name
+- `system_prompt` – default narrator prompt
+- `temperature` – sampling temperature (default `0.7`)
+- `max_tokens` – response length limit (default `256`)
+
+Environment variables of the same name take precedence over the file values.
+
 ## Currency Tracking
 
 The Streamlit interface now includes an **Update Currency** panel under the
@@ -75,6 +87,17 @@ Execute the test suite with:
 
 ```bash
 pytest
+```
+
+## Command Line Utilities
+
+Basic campaign management can be performed without the UI using
+``cli.py``:
+
+```bash
+python cli.py list
+python cli.py create my_campaign
+python cli.py delete my_campaign
 ```
 
 ## Story Arc Features

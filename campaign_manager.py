@@ -331,8 +331,23 @@ class CampaignManager:
         ]
 
 
-# Placeholder for future web search capability
+# ----------------------------------------------------------------------
+# Web search helper
+# ----------------------------------------------------------------------
 
 def search_web(query: str) -> str:
-    """Placeholder for future web search implementation."""
-    return ""
+    """Return a brief web search result for the query.
+
+    This uses ``duckduckgo_search`` if available and falls back to a
+    simple placeholder when network access is restricted.
+    """
+    try:  # pragma: no cover - network may be blocked
+        from duckduckgo_search import DDGS
+
+        with DDGS() as ddgs:
+            results = ddgs.text(query, max_results=1)
+        if results:
+            return results[0]["body"]
+    except Exception:
+        pass
+    return f"Web search is unavailable for '{query}'."
