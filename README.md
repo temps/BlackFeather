@@ -63,23 +63,11 @@ Each campaign lives in the `campaigns/` folder and stores its own NPCs, quests, 
    streamlit run streamlit_app.py
    ```
 
-### Configuration
+codex/add-deployment-guide-to-readme
+## Deployment
 
-You can control which chat model is used and supply a custom system prompt
-through environment variables or a `config.json` file in the project root.
-Supported keys are:
+See [DEPLOYMENT.md](DEPLOYMENT.md) for instructions on deploying the app to Streamlit Cloud and Heroku.
 
-- `CHAT_MODEL` / `chat_model` – OpenAI model name (default `gpt-3.5-turbo`)
-- `SYSTEM_PROMPT` / `system_prompt` – text for the system prompt
-
-Environment variables override values in `config.json`. Example:
-
-```json
-{
-  "chat_model": "gpt-4",
-  "system_prompt": "You are the narrator guiding the player."
-}
-```
 
 ## Running Tests
 
